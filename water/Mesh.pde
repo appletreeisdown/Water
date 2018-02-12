@@ -7,10 +7,13 @@ class Mesh {
   int rowSize;
   ArrayList<Vertex> vertices = new ArrayList<Vertex>();
   ArrayList<Tile> tiles = new ArrayList<Tile>();
-  PShape bottom;
+  PShape[] wallSegments;
   float bottomHeight;
   float offset = 0;
   PVector up = new PVector(0, 1, 0);
+
+  float min = -10;
+  float max = 40;
 
   Mesh(PVector p, int s, int res) {
     pos = p;
@@ -18,12 +21,10 @@ class Mesh {
     resolution = res;
     rowSize = size / resolution * 2;
 
-    float min = -20;
-    float max = 50;
     print("Creating grid: ");
     for (int y = 0; y < size*2; y+=resolution) {
       for (int x = 0; x < size*2; x+=resolution) {
-        Vertex v = new Vertex(rotateVectorX(new PVector(x-size, y-size, 0), -QUARTER_PI), min, max, abs(x * y * 0.005), 0.25);
+        Vertex v = new Vertex(rotateVectorX(new PVector(x-size, y-size, 0), -QUARTER_PI), min, max, abs(x * y * 0.005), 0.20);
         vertices.add(v);
         //vertices.add(new PVector(x, y, pos.z));
       }
@@ -62,25 +63,68 @@ class Mesh {
       }
     }
 
-    // Create mesh bottom
-    //bottomHeight = max+1;
+    // Create walls
+    wallSegments = new PShape[4];
+    bottomHeight = max*1.5;
 
-    //PVector p0 = vertices.get(0).getPos();
-    //PVector p1 = vertices.get(rowSize-1).getPos();
-    //PVector p2 = vertices.get(vertices.size()-1).getPos();
-    //PVector p3 = vertices.get(vertices.size()-rowSize).getPos();
+    PVector p0 = vertices.get(0).getPos();
+    PVector p1 = vertices.get(rowSize-1).getPos();
+    PVector p2 = vertices.get(vertices.size()-1).getPos();
+    PVector p3 = vertices.get(vertices.size()-rowSize).getPos();
 
-    //bottom = createShape();
-    //bottom.beginShape();
-    ////bottom.noStroke();
-    //bottom.vertex(p0.x, p0.y, p0.z);
-    //bottom.vertex(p1.x, p1.y, p1.z);
-    //bottom.vertex(p1.x, p1.y+bottomHeight, p1.z);
-    //bottom.vertex(p0.x, p0.y, p0.z);
-    //bottom.vertex(p0.x, p0.y+bottomHeight, p0.z);
-    //bottom.vertex(p1.x, p1.y+bottomHeight, p1.z);
-    //bottom.fill(255);
-    //bottom.endShape();
+    color wallColour = color(60, 60, 160);
+
+    PShape backWall = createShape();
+    backWall.beginShape();
+    backWall.noStroke();
+    backWall.fill(wallColour);
+
+    // Back
+    backWall.vertex(p0.x, p0.y, p0.z);
+    backWall.vertex(p1.x, p1.y, p1.z);
+    backWall.vertex(p1.x, p1.y+bottomHeight, p1.z);
+    backWall.vertex(p0.x, p0.y+bottomHeight, p0.z);
+    backWall.endShape(CLOSE);
+    wallSegments[0] = backWall;
+
+    PShape bottomWall = createShape();
+    bottomWall.beginShape();
+    bottomWall.noStroke();
+    bottomWall.fill(wallColour);
+
+    // Bottom 
+    bottomWall.vertex(p0.x, p0.y+bottomHeight, p0.z);
+    bottomWall.vertex(p1.x, p1.y+bottomHeight, p1.z);
+    bottomWall.vertex(p2.x, p2.y+bottomHeight, p2.z);
+    bottomWall.vertex(p3.x, p3.y+bottomHeight, p3.z);   
+    bottomWall.endShape(CLOSE);
+    wallSegments[1] = bottomWall;
+
+    PShape leftWall = createShape();
+    leftWall.beginShape();
+    leftWall.noStroke();
+    leftWall.fill(wallColour);
+
+    // Left
+    leftWall.vertex(p3.x, p3.y+bottomHeight, p3.z);
+    leftWall.vertex(p3.x, p3.y, p3.z);
+    leftWall.vertex(p0.x, p0.y, p0.z);
+    leftWall.vertex(p0.x, p0.y+bottomHeight, p0.z);    
+    leftWall.endShape(CLOSE);
+    wallSegments[2] = leftWall;
+
+    PShape rightWall = createShape();
+    rightWall.beginShape();
+    rightWall.noStroke();
+    rightWall.fill(wallColour);
+
+    // Right
+    rightWall.vertex(p1.x, p1.y+bottomHeight, p1.z);
+    rightWall.vertex(p1.x, p1.y, p1.z);
+    rightWall.vertex(p2.x, p2.y, p2.z);
+    rightWall.vertex(p2.x, p2.y+bottomHeight, p2.z);    
+    rightWall.endShape(CLOSE);
+    wallSegments[3] = rightWall;
 
 
     println("Row size: " + rowSize); 
@@ -95,28 +139,30 @@ class Mesh {
     float a = 0.01;
     offset = 0;
 
-    //PVector b0 = vertices.get(0).getPos();
-    //PVector b1 = vertices.get(rowSize-1).getPos();
-    //PVector b2 = vertices.get(vertices.size()-1).getPos();
-    //PVector b3 = vertices.get(vertices.size()-rowSize).getPos();
-    
-    //bottom.setVertex(0, b0.x, b0.y, b0.z);
-    //bottom.setVertex(1, b1.x, b1.y, b1.z);
-    //bottom.setVertex(2, b1.x, b1.y+bottomHeight, b1.z);
-    //bottom.setVertex(3, b0.x, b0.y, b0.z);
-    //bottom.setVertex(4, b0.x, b0.y+bottomHeight, b0.z);
-    //bottom.setVertex(5, b1.x, b1.y+bottomHeight, b1.z);
+    // Updating and displaying wall segments
+    PVector w0 = vertices.get(0).getPos();
+    PVector w1 = vertices.get(rowSize-1).getPos();
+    PVector w2 = vertices.get(vertices.size()-1).getPos();
+    PVector w3 = vertices.get(vertices.size()-rowSize).getPos();
 
-    //text("p0", b0.x, b0.y, b0.z);
-    //text("p1", b1.x, b1.y, b1.z);
-    //text("p2", b2.x, b2.y, b2.z);
-    //text("p3", b3.x, b3.y, b3.z);
-    //text("p0+", b0.x, b0.y+bottomHeight, b0.z);
-    //text("p1+", b1.x, b1.y+bottomHeight, b1.z);
-    //text("p2+", b2.x, b2.y+bottomHeight, b2.z);
-    //text("p3+", b3.x, b3.y+bottomHeight, b3.z);
-    
-    //shape(bottom);
+    // Back Wall
+    wallSegments[0].setVertex(0, w0.x, w0.y, w0.z);
+    wallSegments[0].setVertex(1, w1.x, w1.y, w1.z);
+    shape(wallSegments[0]);
+
+    // Bottom wall
+    shape(wallSegments[1]);
+
+    // Left Wall
+    wallSegments[2].setVertex(1, w3.x, w3.y, w3.z);
+    wallSegments[2].setVertex(2, w0.x, w0.y, w0.z);
+    shape(wallSegments[2]);
+
+    // Right Wall
+    wallSegments[3].setVertex(1, w1.x, w1.y, w1.z);
+    wallSegments[3].setVertex(2, w2.x, w2.y, w2.z);
+    shape(wallSegments[3]);
+
 
     // Drawing tiles and tile annotations
     for (int i = 0; i < tiles.size(); i++) {
@@ -143,8 +189,8 @@ class Mesh {
       offset += a;
       PShape triangles[] = tile.getTile();    
 
-      float rg0 = map(noise(offset)*avg0, -20, 20, 120, 40);
-      float blue0 = map(noise(offset)*avg0, -20, 20, 255, 110);
+      float rg0 = map(noise(offset)*avg0, min/2, max/2, 80, 20);      
+      float blue0 = map(noise(offset)*avg0, min/2, max/2, 200, 95);
 
       PShape t0 = triangles[0];
       t0.setFill(color(rg0, rg0, blue0));
@@ -154,8 +200,8 @@ class Mesh {
       t0.setVertex(2, p3);
       shape(t0);
 
-      float rg1 = map(noise(offset)*avg1, -20, 20, 120, 40);
-      float blue1 = map(noise(offset)*avg1, -20, 20, 255, 110);
+      float rg1 = map(noise(offset)*avg1, min/2, max/2, 80, 20);
+      float blue1 = map(noise(offset)*avg1, min/2, max/2, 200, 95);
 
       PShape t1 = triangles[1];
       t1.setFill(color(rg1, rg1, blue1));
